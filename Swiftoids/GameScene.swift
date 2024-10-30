@@ -37,6 +37,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
 
     var score = 0
+    {
+        didSet {
+            scoreLabel.text = "Score: \(score)"
+        }
+    }
+
     var scoreLabel: SKLabelNode!
     var livesLabel: SKLabelNode!
 
@@ -414,7 +420,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         } else {
             score += 250
         }
-        scoreLabel.text = "Score: \(score)"
+        //scoreLabel.text = "Score: \(score)"
     }
 
     func removeSmallSaucer(_ smallSaucer: SKSpriteNode) {
@@ -670,7 +676,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         asteroid.removeFromParent()
         asteroids.removeAll { $0 == asteroid }
         score += 100
-        scoreLabel.text = "Score: \(score)"
+        //scoreLabel.text = "Score: \(score)"
     }
 
     func spawnSplitAsteroids(from asteroid: SKSpriteNode, newSize: AsteroidSize) {
