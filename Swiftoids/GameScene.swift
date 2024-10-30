@@ -30,16 +30,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var lastUpdateTime: TimeInterval = 0
 
     // Player's lives
-    var lives = 0  {
+    var score = 0 {
         didSet {
-            livesLabel.text = "Lives: \(lives)"
+            scoreLabel.text = "Score: \(score)"
         }
     }
 
-    var score = 0
-    {
+    //score
+    var lives = 3 {
         didSet {
-            scoreLabel.text = "Score: \(score)"
+            livesLabel.text = "Lives: \(lives)"
         }
     }
 
@@ -86,65 +86,81 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // Setup player's spaceship
     func setupPlayer() {
         print (#function)
+        player = createPlayerNode()
+        player.position = CGPoint(x: frame.midX, y: frame.midY)
+        configurePlayerPhysics(for: player)
+        addChild(player)
+    }
 
+    // Create player node
+    func createPlayerNode() -> SKSpriteNode {
+        let playerNode = SKSpriteNode()
+        let shape = SKShapeNode(path: createPlayerPath())
+        shape.fillColor = .black
+        shape.strokeColor = .white
+        shape.name = "spaceshipShape"
+        shape.lineWidth = 2
+        playerNode.addChild(shape)
+        return playerNode
+    }
+
+    // Create player path
+    func createPlayerPath() -> CGPath {
         let path = CGMutablePath()
         path.move(to: CGPoint(x: 0, y: 14)) // Reduced size by 30%
         path.addLine(to: CGPoint(x: -7, y: -7)) // Reduced size by 30%
         path.addLine(to: CGPoint(x: 7, y: -7)) // Reduced size by 30%
         path.closeSubpath()
+        return path
+    }
 
-        player = SKSpriteNode()
-        let shape = SKShapeNode(path: path)
-        shape.fillColor = .black
-        shape.strokeColor = .white
-        shape.name = "spaceshipShape"
-        shape.lineWidth = 2
-        player.addChild(shape)
-        player.position = CGPoint(x: frame.midX, y: frame.midY)
-        player.physicsBody = SKPhysicsBody(polygonFrom: path)
+    // Configure player physics
+    func configurePlayerPhysics(for player: SKSpriteNode) {
+        player.physicsBody = SKPhysicsBody(polygonFrom: createPlayerPath())
         player.physicsBody?.categoryBitMask = PhysicsCategory.player
         player.physicsBody?.contactTestBitMask = PhysicsCategory.asteroid | PhysicsCategory.saucerProjectile
         player.physicsBody?.collisionBitMask = 0
         player.physicsBody?.isDynamic = true
         player.physicsBody?.affectedByGravity = false
-        addChild(player)
     }
 
     // Setup thrust animation
     func setupThrustAnimation() {
         print (#function)
 
-        let thrustPath = CGMutablePath()
-        thrustPath.move(to: CGPoint(x: 0, y: -14)) // Reduced size by 30%
-        thrustPath.addLine(to: CGPoint(x: -5, y: 0)) // Reduced size by 30%
-        thrustPath.addLine(to: CGPoint(x: 5, y: 0)) // Reduced size by 30%
-        thrustPath.closeSubpath()
+        let thrustNode = createThrustNode()
+        player.addChild(thrustNode)
+    }
 
-        let thrustNode = SKShapeNode(path: thrustPath)
-        thrustNode.fillColor = .black
+    // Create thrust node
+    func createThrustNode() -> SKShapeNode {
+        let thrustNode = SKShapeNode(path: createThrustPath())
+        thrustNode.fillColor = .orange
         thrustNode.strokeColor = .white
         thrustNode.lineWidth = 2
         thrustNode.isHidden = true
         thrustNode.name = "thrustNode"
         thrustNode.position = CGPoint(x: 0, y: -7)  // Position the triangle right at the back of the spaceship, adjusted for new size
-        player.addChild(thrustNode)
+        return thrustNode
     }
+
+    // Create thrust path
+    func createThrustPath() -> CGPath {
+        let path = CGMutablePath()
+        path.move(to: CGPoint(x: 0, y: -14)) // Reduced size by 30%
+        path.addLine(to: CGPoint(x: -5, y: 0)) // Reduced size by 30%
+        path.addLine(to: CGPoint(x: 5, y: 0)) // Reduced size by 30%
+        path.closeSubpath()
+        return path
+    }
+
 
     // Apply thrust to the player's spaceship
     func applyThrust() {
         print(#function)
 
         if thrustAudioPlayer == nil || thrustAudioPlayer?.isPlaying == false {
-            if let soundURL = Bundle.main.url(forResource: "thrust", withExtension: "wav") {
-                do {
-                    thrustAudioPlayer = try AVAudioPlayer(contentsOf: soundURL)
-                    thrustAudioPlayer?.numberOfLoops = -1 // Infinite loop
-                    thrustAudioPlayer?.play()
-                    print("play thrust")
-                } catch {
-                    print("Error: Could not load or play thrust sound.")
-                }
-            }
+            playThrustSound()
         }
 
         addThrustAnimation()
@@ -154,6 +170,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         player.physicsBody?.applyForce(CGVector(dx: dx, dy: dy))
     }
 
+    // Play thrust sound
+    func playThrustSound() {
+        if let soundURL = Bundle.main.url(forResource: "thrust", withExtension: "wav") {
+            do {
+                thrustAudioPlayer = try AVAudioPlayer(contentsOf: soundURL)
+                thrustAudioPlayer?.numberOfLoops = -1 // Infinite loop
+                thrustAudioPlayer?.play()
+                print("play thrust")
+            } catch {
+                print("Error: Could not load or play thrust sound.")
+            }
+        }
+    }
 
     // Show thrust animation
     func addThrustAnimation() {
@@ -190,6 +219,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let tipY = player.position.y + dy * tipOffset
         projectile.position = CGPoint(x: tipX, y: tipY)
         projectile.zRotation = player.zRotation
+        configureProjectilePhysics(for: projectile, dx: dx, dy: dy)
+        addChild(projectile)
+        projectiles.append(projectile)
+
+        // Track projectile lifetime
+        projectileLifetimes[projectile] = currentTime
+    }
+
+    // Configure projectile physics
+    func configureProjectilePhysics(for projectile: SKSpriteNode, dx: CGFloat, dy: CGFloat) {
         projectile.physicsBody = SKPhysicsBody(rectangleOf: projectile.size)
         projectile.physicsBody?.categoryBitMask = PhysicsCategory.playerProjectile
         projectile.physicsBody?.contactTestBitMask = PhysicsCategory.asteroid | PhysicsCategory.saucer
@@ -201,13 +240,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         let projectileSpeed: CGFloat = 1000.0
         projectile.physicsBody?.velocity = CGVector(dx: dx * projectileSpeed, dy: dy * projectileSpeed)
-        addChild(projectile)
-        projectiles.append(projectile)
-
-        // Track projectile lifetime
-        projectileLifetimes[projectile] = currentTime
     }
-
 
     func handleProjectileLifetime(for projectile: SKSpriteNode) {
         // You may increase the threshold to avoid prematurely removing projectiles that could wrap
@@ -784,24 +817,32 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // Setup Heads-Up Display (HUD)
     func setupHUD() {
         print (#function)
+        setupScoreLabel()
+        setupHighScoreLabel()
+        setupLivesLabel()
+    }
 
-        scoreLabel = SKLabelNode(text: "Score: 0")
-        scoreLabel.fontColor = .white
-        scoreLabel.fontSize = 20
-        scoreLabel.position = CGPoint(x: 70, y: size.height - 100)
+    func setupScoreLabel() {
+        scoreLabel = createLabel(text: "Score: 0", fontSize: 20, position: CGPoint(x: 70, y: size.height - 100))
         addChild(scoreLabel)
+    }
 
-        highScoreLabel = SKLabelNode(text: "High Score: \(highScore)")
-        highScoreLabel.fontColor = .white
-        highScoreLabel.fontSize = 20
-        highScoreLabel.position = CGPoint(x: size.width - 210, y: size.height - 100)
+    func setupHighScoreLabel() {
+        highScoreLabel = createLabel(text: "High Score: \(highScore)", fontSize: 20, position: CGPoint(x: size.width - 210, y: size.height - 100))
         addChild(highScoreLabel)
+    }
 
-        livesLabel = SKLabelNode(text: "Lives: 3")
-        livesLabel.fontColor = .white
-        livesLabel.fontSize = 20
-        livesLabel.position = CGPoint(x: size.width - 70, y: size.height - 100)
+    func setupLivesLabel() {
+        livesLabel = createLabel(text: "Lives: 3", fontSize: 20, position: CGPoint(x: size.width - 70, y: size.height - 100))
         addChild(livesLabel)
+    }
+
+    func createLabel(text: String, fontSize: CGFloat, position: CGPoint) -> SKLabelNode {
+        let label = SKLabelNode(text: text)
+        label.fontColor = .white
+        label.fontSize = fontSize
+        label.position = position
+        return label
     }
 
     // Calculate distance between two points
@@ -813,27 +854,28 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     func setupInstructions() {
         print (#function)
-
-        instructionsLabel = SKLabelNode(text: "Instructions: Tap to shoot, drag to move.")
-        instructionsLabel.fontColor = .white
-        instructionsLabel.fontSize = 20
-        instructionsLabel.position = CGPoint(x: size.width / 2, y: size.height / 2 + 80)
-        addChild(instructionsLabel)
-
-        tapToStartLabel = SKLabelNode(text: "Tap to Start")
-        tapToStartLabel.fontColor = .yellow
-        tapToStartLabel.fontSize = 30
-        tapToStartLabel.position = CGPoint(x: size.width / 2, y: size.height / 2 - 100)
-        addChild(tapToStartLabel)
-
-        asteroidsLabel = SKLabelNode(text: "SWIFTOIDS")
-        asteroidsLabel.fontColor = .white
-        asteroidsLabel.fontSize = 50
-        asteroidsLabel.name = "asteroidsLabel"
-        asteroidsLabel.position = CGPoint(x: size.width / 2, y: size.height / 2 + 150)
-        addChild(asteroidsLabel)
-
+        setupAsteroidsLabel()
+        setupInstructionsLabel()
+        setupTapToStartLabel()
     }
+
+    func setupAsteroidsLabel() {
+        asteroidsLabel = createLabel(text: "SWIFTOIDS", fontSize: 50, position: CGPoint(x: size.width / 2, y: size.height / 2 + 150))
+        asteroidsLabel.name = "asteroidsLabel"
+        addChild(asteroidsLabel)
+    }
+
+    func setupInstructionsLabel() {
+        instructionsLabel = createLabel(text: "Instructions: Tap to shoot, drag to move.", fontSize: 20, position: CGPoint(x: size.width / 2, y: size.height / 2 + 80))
+        addChild(instructionsLabel)
+    }
+
+    func setupTapToStartLabel() {
+        tapToStartLabel = createLabel(text: "Tap to Start", fontSize: 30, position: CGPoint(x: size.width / 2, y: size.height / 2 - 100))
+        tapToStartLabel.fontColor = .yellow
+        addChild(tapToStartLabel)
+    }
+
     // Remove all saucer projectiles
     func removeAllSaucerProjectiles() {
         for projectile in saucerProjectiles {
