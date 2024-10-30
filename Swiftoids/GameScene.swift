@@ -376,10 +376,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         player.removeAllActions()
         player.physicsBody?.velocity = .zero
         player.physicsBody?.angularVelocity = 0
+        player.physicsBody?.applyForce(CGVector.zero) // Explicitly clear forces
+        player.physicsBody?.applyImpulse(CGVector.zero) // Clear any remaining impulses
+        player.physicsBody?.linearDamping = 0
+        player.physicsBody?.angularDamping = 0
         player.position = CGPoint(x: frame.midX, y: frame.midY)
         player.zRotation = 0
         removeThrustAnimation()
     }
+
 
     //MARK: - Saucer
     // Setup flying saucer
