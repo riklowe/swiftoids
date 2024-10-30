@@ -97,7 +97,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         isIdleModeActive = true
         isPaused = false
         isGameStarted = false
-        
+
         // Start idle gameplay
         startIdleGameplay()
     }
@@ -604,90 +604,29 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func createAsteroidPath(size: AsteroidSize) -> CGPath {
         print (#function)
         let path = CGMutablePath()
-        let randomShape = Int.random(in: 0...2) // Randomize between 3 different shapes
+        let randomPoints = Int.random(in: 6...10) // Random number of points between 6 and 10 for variety
+        let radius: CGFloat
 
-        switch (size, randomShape) {
-        case (.large, 0):
-            // Convex shape
-            path.move(to: CGPoint(x: 0, y: 30))
-            path.addLine(to: CGPoint(x: -20, y: 15))
-            path.addLine(to: CGPoint(x: -30, y: -10))
-            path.addLine(to: CGPoint(x: -15, y: -25))
-            path.addLine(to: CGPoint(x: 5, y: -35)) // Convex part
-            path.addLine(to: CGPoint(x: 10, y: -30))
-            path.addLine(to: CGPoint(x: 25, y: -15))
-            path.addLine(to: CGPoint(x: 30, y: 10))
-        case (.large, 1):
-            // Concave shape
-            path.move(to: CGPoint(x: 0, y: 35))
-            path.addLine(to: CGPoint(x: -25, y: 20))
-            path.addLine(to: CGPoint(x: -20, y: -15))
-            path.addLine(to: CGPoint(x: -5, y: -5)) // Concave part
-            path.addLine(to: CGPoint(x: 5, y: -30))
-            path.addLine(to: CGPoint(x: 20, y: -25))
-            path.addLine(to: CGPoint(x: 30, y: 5))
-        case (.large, 2):
-            // Normal shape
-            path.move(to: CGPoint(x: 0, y: 32))
-            path.addLine(to: CGPoint(x: -15, y: 25))
-            path.addLine(to: CGPoint(x: -25, y: -5))
-            path.addLine(to: CGPoint(x: -10, y: -20))
-            path.addLine(to: CGPoint(x: 15, y: -30))
-            path.addLine(to: CGPoint(x: 30, y: 0))
-        case (.medium, 0):
-            // Normal shape
-            path.move(to: CGPoint(x: 0, y: 20))
-            path.addLine(to: CGPoint(x: -15, y: 10))
-            path.addLine(to: CGPoint(x: -20, y: -5))
-            path.addLine(to: CGPoint(x: -10, y: -15))
-            path.addLine(to: CGPoint(x: 8, y: -18))
-            path.addLine(to: CGPoint(x: 18, y: -10))
-            path.addLine(to: CGPoint(x: 20, y: 5))
-        case (.medium, 1):
-            // Concave shape
-            path.move(to: CGPoint(x: 0, y: 25))
-            path.addLine(to: CGPoint(x: -10, y: 15))
-            path.addLine(to: CGPoint(x: -18, y: -8))
-            path.addLine(to: CGPoint(x: -5, y: -10)) // Concave part
-            path.addLine(to: CGPoint(x: -5, y: -20))
-            path.addLine(to: CGPoint(x: 15, y: -18))
-            path.addLine(to: CGPoint(x: 20, y: -5))
-        case (.medium, 2):
-            // Normal shape
-            path.move(to: CGPoint(x: 0, y: 22))
-            path.addLine(to: CGPoint(x: -12, y: 8))
-            path.addLine(to: CGPoint(x: -15, y: -12))
-            path.addLine(to: CGPoint(x: 0, y: -20))
-            path.addLine(to: CGPoint(x: 12, y: -10))
-            path.addLine(to: CGPoint(x: 18, y: 5))
-        case (.small, 0):
-            // Normal shape
-            path.move(to: CGPoint(x: 0, y: 10))
-            path.addLine(to: CGPoint(x: -8, y: 5))
-            path.addLine(to: CGPoint(x: -10, y: -3))
-            path.addLine(to: CGPoint(x: -5, y: -8))
-            path.addLine(to: CGPoint(x: 4, y: -9))
-            path.addLine(to: CGPoint(x: 9, y: -5))
-            path.addLine(to: CGPoint(x: 10, y: 2))
-        case (.small, 1):
-            // Concave shape
-            path.move(to: CGPoint(x: 0, y: 12))
-            path.addLine(to: CGPoint(x: -5, y: 6))
-            path.addLine(to: CGPoint(x: -8, y: -4))
-            path.addLine(to: CGPoint(x: -2, y: -2)) // Concave part
-            path.addLine(to: CGPoint(x: 0, y: -10))
-            path.addLine(to: CGPoint(x: 7, y: -6))
-            path.addLine(to: CGPoint(x: 10, y: 3))
-        case (.small, 2):
-            // Normal shape
-            path.move(to: CGPoint(x: 0, y: 11))
-            path.addLine(to: CGPoint(x: -6, y: 3))
-            path.addLine(to: CGPoint(x: -9, y: -5))
-            path.addLine(to: CGPoint(x: -3, y: -8))
-            path.addLine(to: CGPoint(x: 5, y: -9))
-            path.addLine(to: CGPoint(x: 10, y: 0))
-        default:
-            break
+        switch size {
+        case .large:
+            radius = 30
+        case .medium:
+            radius = 20
+        case .small:
+            radius = 10
+        }
+
+        let angleIncrement = CGFloat.pi * 2 / CGFloat(randomPoints)
+        for i in 0..<randomPoints {
+            let angle = angleIncrement * CGFloat(i) + CGFloat.random(in: -0.2...0.2) // Add a bit of randomness to each angle
+            let pointRadius = radius * CGFloat.random(in: 0.8...1.2) // Randomize radius for each point
+            let x = cos(angle) * pointRadius
+            let y = sin(angle) * pointRadius
+            if i == 0 {
+                path.move(to: CGPoint(x: x, y: y))
+            } else {
+                path.addLine(to: CGPoint(x: x, y: y))
+            }
         }
         path.closeSubpath()
         return path

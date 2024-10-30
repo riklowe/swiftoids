@@ -14,9 +14,9 @@
             filePath = "Swiftoids/GameScene.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1133"
-            endingLineNumber = "1133"
-            landmarkName = "touchesBegan(_:with:)"
+            startingLineNumber = "1072"
+            endingLineNumber = "1072"
+            landmarkName = "gameOver()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -30,9 +30,9 @@
             filePath = "Swiftoids/GameScene.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1145"
-            endingLineNumber = "1145"
-            landmarkName = "touchesBegan(_:with:)"
+            startingLineNumber = "1084"
+            endingLineNumber = "1084"
+            landmarkName = "gameOver()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -46,9 +46,9 @@
             filePath = "Swiftoids/GameScene.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1143"
-            endingLineNumber = "1143"
-            landmarkName = "touchesBegan(_:with:)"
+            startingLineNumber = "1082"
+            endingLineNumber = "1082"
+            landmarkName = "gameOver()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -62,9 +62,9 @@
             filePath = "Swiftoids/GameScene.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1134"
-            endingLineNumber = "1134"
-            landmarkName = "touchesBegan(_:with:)"
+            startingLineNumber = "1073"
+            endingLineNumber = "1073"
+            landmarkName = "gameOver()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
