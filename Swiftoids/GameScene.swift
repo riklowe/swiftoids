@@ -82,6 +82,67 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var saucer: SKSpriteNode?
     var smallSaucer: SKSpriteNode?
 
+    var idleTimer: Timer?
+    var isIdleModeActive = false
+
+    func startIdleTimer() {
+        print (#function)
+        idleTimer?.invalidate()
+        idleTimer = Timer.scheduledTimer(timeInterval: 10.0, target: self, selector: #selector(activateIdleMode), userInfo: nil, repeats: false)
+    }
+
+    @objc func activateIdleMode() {
+        print("Idle mode activated")
+
+        isIdleModeActive = true
+        isPaused = false
+        isGameStarted = false
+        
+        // Start idle gameplay
+        startIdleGameplay()
+    }
+
+    func disableCollisions() {
+        // Disable collisions
+        player.physicsBody?.categoryBitMask = 0
+        player.physicsBody?.contactTestBitMask = 0
+    }
+
+    func startIdleGameplay() {
+        // Ensure some asteroids are moving if they aren't already
+        if asteroids.isEmpty {
+            spawnAsteroids(count: 5) // Spawns some asteroids for idle mode
+        }
+
+        disableCollisions()
+
+        // Start moving the asteroids and other elements as needed
+        for asteroid in asteroids {
+            let randomVelocity = CGVector(dx: CGFloat.random(in: -100...100), dy: CGFloat.random(in: -100...100))
+            asteroid.physicsBody?.velocity = randomVelocity
+        }
+
+        // Optionally, spawn a saucer in idle mode
+        if saucer == nil && Bool.random() {
+            setupSaucer()
+        }
+    }
+
+
+    func reactivateCollisions() {
+        print (#function)
+       // Re-enable collisions for player
+        player.physicsBody?.categoryBitMask = PhysicsCategory.player
+        player.physicsBody?.contactTestBitMask = PhysicsCategory.asteroid | PhysicsCategory.saucerProjectile
+    }
+
+
+    func stopIdleTimer() {
+        print (#function)
+        idleTimer?.invalidate()
+        idleTimer = nil
+    }
+
     //MARK: - Player
     // Setup player's spaceship
     func setupPlayer() {
@@ -94,6 +155,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     // Create player node
     func createPlayerNode() -> SKSpriteNode {
+        print (#function)
         let playerNode = SKSpriteNode()
         let shape = SKShapeNode(path: createPlayerPath())
         shape.fillColor = .black
@@ -134,6 +196,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     // Create thrust node
     func createThrustNode() -> SKShapeNode {
+        print (#function)
         let thrustNode = SKShapeNode(path: createThrustPath())
         thrustNode.fillColor = .orange
         thrustNode.strokeColor = .white
@@ -282,6 +345,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     // Player hit by asteroid or saucer bullet
     func playerHit(by node: SKSpriteNode) {
+        print (#function)
 
         node.removeFromParent()
 
@@ -308,6 +372,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
 
     func repositionPlayer() {
+        print (#function)
         player.removeAllActions()
         player.physicsBody?.velocity = .zero
         player.physicsBody?.angularVelocity = 0
@@ -457,6 +522,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
 
     func removeSmallSaucer(_ smallSaucer: SKSpriteNode) {
+        print (#function)
         removeSaucer(smallSaucer) // Use the generalized removeSaucer function
     }
 
@@ -536,6 +602,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     //MARK: - Asteroid
     func createAsteroidPath(size: AsteroidSize) -> CGPath {
+        print (#function)
         let path = CGMutablePath()
         let randomShape = Int.random(in: 0...2) // Randomize between 3 different shapes
 
@@ -696,6 +763,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     // Destroy asteroid
     func destroyAsteroid(_ asteroid: SKSpriteNode) {
+        print (#function)
         if asteroid.xScale == 1.0 {
             // Spawn two medium asteroids
             spawnSplitAsteroids(from: asteroid, newSize: .medium)
@@ -713,6 +781,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
 
     func spawnSplitAsteroids(from asteroid: SKSpriteNode, newSize: AsteroidSize) {
+        print (#function)
         for _ in 0..<2 {
             let path = createAsteroidPath(size: newSize)
             let smallAsteroid = SKSpriteNode()
@@ -857,6 +926,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         setupAsteroidsLabel()
         setupInstructionsLabel()
         setupTapToStartLabel()
+        startIdleTimer()
     }
 
     func setupAsteroidsLabel() {
@@ -1010,6 +1080,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         restartLabel.position = CGPoint(x: size.width / 2, y: size.height / 2 - 50)
         restartLabel.name = "restartLabel"
         addChild(restartLabel)
+
+        // Start idle timer after interaction
+        startIdleTimer()
   }
 
 
@@ -1055,29 +1128,43 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // Handle user input
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = touches.first else { return }
-        let touchLocation = touch.location(in: self)
-        let nodesAtPoint = nodes(at: touchLocation)
 
-        // Start the game if not started
+        // If game is not started, start the game
         if !isGameStarted {
+            isGameStarted = true
+            isIdleModeActive = false
+            stopIdleTimer() // Stop the idle timer to prevent idle mode activation
+            reactivateCollisions()
             startGame()
             return
         }
 
-        // Check if game is over and restart was requested
-        if isPaused, nodesAtPoint.contains(where: { $0 is SKLabelNode && ($0 as! SKLabelNode).text == "Tap to Restart" }) {
+        // If the game is in idle mode, reactivate and start again
+        if !isIdleModeActive  && isPaused {
+
+            isIdleModeActive = false
+            stopIdleTimer()
+
+
+            // Hide the "Tap to Start" label
+            if tapToStartLabel != nil {
+                tapToStartLabel.isHidden = true
+            }
+
+            isGameStarted = true
             startGame()
+
             return
         }
 
+        // Existing touch logic, such as firing a projectile or handling user input
+        let touchLocation = touch.location(in: self)
         let angle = atan2(touchLocation.y - player.position.y, touchLocation.x - player.position.x) - .pi / 2
         player.zRotation = angle
 
-        // Fire a projectile on a short tap
+        // Fire a projectile on tap
         fireProjectile(currentTime: CACurrentMediaTime())
     }
-
-
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = touches.first else { return }
