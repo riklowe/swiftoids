@@ -85,6 +85,55 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var idleTimer: Timer?
     var isIdleModeActive = false
 
+    var beat1AudioPlayer: AVAudioPlayer?
+    var beat2AudioPlayer: AVAudioPlayer?
+    var beatTimer: Timer?
+
+    //MARK: - Beat Sounds
+    func loadBeatSounds() {
+        if let beat1URL = Bundle.main.url(forResource: "beat1", withExtension: "wav"),
+           let beat2URL = Bundle.main.url(forResource: "beat2", withExtension: "wav") {
+            do {
+                beat1AudioPlayer = try AVAudioPlayer(contentsOf: beat1URL)
+                beat2AudioPlayer = try AVAudioPlayer(contentsOf: beat2URL)
+            } catch {
+                print("Error: Could not load beat sounds.")
+            }
+        }
+    }
+
+    func startBeatTimer() {
+        beatTimer?.invalidate()  // Invalidate any existing timer
+        beatTimer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(playBeat), userInfo: nil, repeats: true)
+    }
+
+    var isBeat1 = true
+
+    @objc func playBeat() {
+        if isBeat1 {
+            beat1AudioPlayer?.play()
+        } else {
+            beat2AudioPlayer?.play()
+        }
+        isBeat1.toggle()
+        adjustBeatInterval()
+    }
+
+    func adjustBeatInterval() {
+        let asteroidCount = asteroids.count
+        let newInterval = max(0.1, Double(asteroidCount) / 5.0)  // Decrease the interval as the number of asteroids decreases
+        beatTimer?.invalidate()
+        beatTimer = Timer.scheduledTimer(timeInterval: newInterval, target: self, selector: #selector(playBeat), userInfo: nil, repeats: true)
+    }
+
+    func stopBeatSounds() {
+        beatTimer?.invalidate()
+        beatTimer = nil
+        beat1AudioPlayer?.stop()
+        beat2AudioPlayer?.stop()
+    }
+
+    //MARK: - Idel Timer
     func startIdleTimer() {
         print (#function)
         idleTimer?.invalidate()
@@ -759,20 +808,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     //MARK: - GAME
     // Game initialization
     override func didMove(to view: SKView) {
-        print (#function)
+        print(#function)
         self.anchorPoint = CGPoint(x: 0, y: 0)
         self.size = view.bounds.size
         backgroundColor = .black
         physicsWorld.contactDelegate = self
 
-        //isPaused = true
-
         setupHUD()
         setupPlayer()
         setupThrustAnimation()
-        setupInstructions() // Add the instructions at the beginning
-    }
+        setupInstructions()  // Add the instructions at the beginning
 
+        loadBeatSounds()  // Load beat sounds
+    }
 
     // Handle collision between physics bodies
     func didBegin(_ contact: SKPhysicsContact) {
@@ -955,6 +1003,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if  let tmpLbl = childNode(withName: "asteroidsLabel") as? SKLabelNode {
             asteroidsLabel.run(sequence)
         }
+
+        // Start beat sounds
+        startBeatTimer()
+
     }
 
 
@@ -978,6 +1030,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         print (#function)
 
         removeAllSaucerProjectiles()
+
+        // Stop all ongoing beats
+        stopBeatSounds()
 
         // Remove all projectiles from the screen
         for projectile in projectiles {
