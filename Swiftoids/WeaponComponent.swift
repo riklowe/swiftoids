@@ -2,7 +2,7 @@
 //  WeaponComponent.swift
 //  Swiftoids
 //
-//  Created by Richard Lowe on 25/10/2024.
+//  Created by Richard Lowe on 25/10/2024
 //
 
 import SpriteKit
