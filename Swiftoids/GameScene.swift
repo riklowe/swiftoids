@@ -182,7 +182,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     func reactivateCollisions() {
         print (#function)
-       // Re-enable collisions for player
+        // Re-enable collisions for player
         player.physicsBody?.categoryBitMask = PhysicsCategory.player
         player.physicsBody?.contactTestBitMask = PhysicsCategory.asteroid | PhysicsCategory.saucerProjectile
     }
@@ -488,7 +488,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 do {
                     saucerAudioPlayer = try AVAudioPlayer(contentsOf: soundURL)
                     saucerAudioPlayer?.numberOfLoops = -1 // Infinite loop
-                    saucerAudioPlayer?.play()
+
+                    if !isIdleModeActive {
+                        saucerAudioPlayer?.play()
+                    }
+
                 } catch {
                     print("Error: Could not load or play Big saucer sound.")
                 }
@@ -632,7 +636,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 do {
                     smallSaucerAudioPlayer = try AVAudioPlayer(contentsOf: soundURL)
                     smallSaucerAudioPlayer?.numberOfLoops = -1 // Infinite loop
-                    smallSaucerAudioPlayer?.play()
+
+                    if !isIdleModeActive {
+                        smallSaucerAudioPlayer?.play()
+                    }
                 } catch {
                     print("Error: Could not load or play small saucer sound.")
                 }
@@ -986,7 +993,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             shape.fillColor = SKColor.black
         }
 
-         // Reset game state variables
+        // Reset game state variables
         isGameStarted = true
         lives = 3
         score = 0
@@ -1074,13 +1081,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             highScoreLabel.text = "High Score: \(highScore)"
         }
 
-        // Add restart instruction
-        restartLabel = SKLabelNode(text: "Tap to Restart")
-        restartLabel.fontColor = .white
-        restartLabel.fontSize = 20
-        restartLabel.position = CGPoint(x: size.width / 2, y: size.height / 2 - 50)
-        restartLabel.name = "restartLabel"
-        addChild(restartLabel)
 
         // Start idle timer after interaction
         startIdleTimer()
@@ -1091,9 +1091,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Enable touch again after a 1-second delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             self.canTouchAfterGameOver = true
+
+            // Add restart instruction
+            self.restartLabel = SKLabelNode(text: "Tap to Restart")
+            self.restartLabel.fontColor = .white
+            self.restartLabel.fontSize = 20
+            self.restartLabel.position = CGPoint(x: self.size.width / 2, y: self.size.height / 2 - 70)
+            self.restartLabel.name = "restartLabel"
+            self.addChild(self.restartLabel)
         }
 
-  }
+    }
 
 
     // Level complete logic
