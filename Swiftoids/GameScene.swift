@@ -78,6 +78,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         static let saucerProjectile: UInt32 = 0x1 << 4
     }
 
+    var canTouchAfterGameOver = true
+
     // Flying saucer node
     var saucer: SKSpriteNode?
     var smallSaucer: SKSpriteNode?
@@ -1082,6 +1084,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         // Start idle timer after interaction
         startIdleTimer()
+
+        // Disable touch after game over
+        canTouchAfterGameOver = false
+
+        // Enable touch again after a 1-second delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            self.canTouchAfterGameOver = true
+        }
+
   }
 
 
@@ -1130,6 +1141,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         // If game is not started, start the game
         if !isGameStarted {
+
+            if !canTouchAfterGameOver {
+                return // Ignore touches if the delay is still in effect
+            }
+
             isGameStarted = true
             isIdleModeActive = false
             stopIdleTimer() // Stop the idle timer to prevent idle mode activation
@@ -1139,11 +1155,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
 
         // If the game is in idle mode, reactivate and start again
-        if !isIdleModeActive  && isPaused {
+        if !isIdleModeActive && isPaused {
+
+            if !canTouchAfterGameOver {
+                return // Ignore touches if the delay is still in effect
+            }
 
             isIdleModeActive = false
             stopIdleTimer()
-
 
             // Hide the "Tap to Start" label
             if tapToStartLabel != nil {
