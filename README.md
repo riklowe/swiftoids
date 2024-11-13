@@ -1,4 +1,5 @@
 # swiftoids
 Asteroids written in Swift 
 
-<img src="[relative/path/in/repository/to/image.svg](https://github.com/user-attachments/assets/65d9df13-9264-42bc-9106-491cc3f12674)" width="128"/>
+
+![image](https://github.com/user-attachments/assets/4def2401-96b0-4774-bea7-66c6cb6f9987) width="128"
