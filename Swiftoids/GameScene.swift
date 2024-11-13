@@ -123,6 +123,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     func adjustBeatInterval() {
         let asteroidCount = asteroids.count
+        
+        for asteriod in asteroids {
+            print (asteriod.name!)
+        }
+        
         let newInterval = max(0.1, Double(asteroidCount) / 5.0)  // Decrease the interval as the number of asteroids decreases
         beatTimer?.invalidate()
         beatTimer = Timer.scheduledTimer(timeInterval: newInterval, target: self, selector: #selector(playBeat), userInfo: nil, repeats: true)
@@ -732,30 +737,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             asteroid.physicsBody?.affectedByGravity = false
             asteroid.physicsBody?.linearDamping = 0
 
-            // Set velocity based on asteroid size
-            let velocityMultiplier: CGFloat
-            switch randomSize {
-            case .large:
-                velocityMultiplier = 1.0
-            case .medium:
-                velocityMultiplier = 1.1
-            case .small:
-                velocityMultiplier = 1.2
-            }
+            asteroid.name = "large"
+
+            let velocityMultiplier: CGFloat = 1.0
 
             asteroid.physicsBody?.velocity = CGVector(dx: CGFloat.random(in: -150...150) * velocityMultiplier,
                                                       dy: CGFloat.random(in: -150...150) * velocityMultiplier)
 
-            // Set scale for visual distinction
-            let scale: CGFloat
-            switch randomSize {
-            case .large:
-                scale = 1.0
-            case .medium:
-                scale = 0.9
-            case .small:
-                scale = 0.9
-            }
+            let scale: CGFloat = 1.0
             asteroid.setScale(scale)
 
             addChild(asteroid)
@@ -765,6 +754,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     // Destroy asteroid
     func destroyAsteroid(_ asteroid: SKSpriteNode) {
+
         print (#function)
         if asteroid.xScale == 1.0 {
             // Spawn two medium asteroids
@@ -788,9 +778,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let path = createAsteroidPath(size: newSize)
             let smallAsteroid = SKSpriteNode()
             let shape = SKShapeNode(path: path)
+
             shape.fillColor = .clear
             shape.strokeColor = .white
             shape.lineWidth = 2
+            
             smallAsteroid.addChild(shape)
             smallAsteroid.position = asteroid.position
             smallAsteroid.physicsBody = SKPhysicsBody(polygonFrom: path)
@@ -808,6 +800,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
             // Set scale for visual distinction
             smallAsteroid.setScale((newSize == .medium) ? 0.75 : 0.65)
+
+            // Set the asteroid's name based on its size
+            smallAsteroid.name = (newSize == .medium) ? "medium" : "small"
 
             addChild(smallAsteroid)
             asteroids.append(smallAsteroid)
