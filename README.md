@@ -1,5 +1,5 @@
 # swiftoids
-Asteroids written in Swift 
+Asteroids written in Swift - with saucers, sound, demo idle mode and high score
 
 
 <p float="left">
